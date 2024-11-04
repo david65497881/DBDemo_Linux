@@ -30,7 +30,9 @@ namespace DBDemo
             {
                 connection.Open();
 
+                //使用Dapper的Query()方法查詢資料
                 var managerIdEmployees = connection.Query("SELECT name FROM Employees WHERE managerId IS NOT NULL").ToList();
+                //使用@(逐字字串字面值)來避免使用換行符號
                 var higherSalaryEmployees = connection.Query(@"
                     SELECT e1.name 
                     FROM Employees e1
