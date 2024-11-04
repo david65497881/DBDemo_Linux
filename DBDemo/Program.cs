@@ -17,7 +17,8 @@ namespace DBDemo
             string connectionString = "Data Source=database.db;Version=3;";
             //報表模板的路徑
             string reportPath = "report.frx";
-            //PDF檔案存放路徑
+            //PDF檔案存放路徑。Directory.GetCurrentDirectory() =>獲取當前專案運行時的工作目錄路徑
+            //Path.Combine => 將Directory.GetCurrentDirectory() 跟 ReportOutput.pdf 結合產生完整路徑
             string outputPath = Path.Combine(Directory.GetCurrentDirectory(), "ReportOutput.pdf");
 
             if (!File.Exists(reportPath))
@@ -26,6 +27,7 @@ namespace DBDemo
                 return;
             }
 
+            //使用using確保使用後釋放資源
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
