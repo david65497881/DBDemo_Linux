@@ -52,9 +52,10 @@ namespace DBDemo
                     higherSalaryEmployeesText.AppendLine(employee.name);
                 }
 
-                //using (Report report = new Report()) => 確保使用後釋放資源
+                //using => 確保使用後釋放資源
                 using (Report report = new Report())
                 {
+                    //加載report.frx
                     report.Load(reportPath);
 
                     // 找到 TextObject 並設置資料。使用FindObject尋找名為Text3的物件，由於傳回來的物件會是通用物件，因此加上FastReport.TextObject進行轉換
