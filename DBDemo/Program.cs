@@ -33,13 +33,14 @@ namespace DBDemo
                 DataSet dataSet = new DataSet();
                 DataTable dataTable = new DataTable("Employees");
 
-                
                 using (var command = new SQLiteCommand("SELECT name, salary, managerId FROM Employees WHERE managerId IS NOT NULL", connection))
-
                 using (var adapter = new SQLiteDataAdapter(command))
                 {
                     adapter.Fill(dataTable);
                 }
+
+                // 驗證 DataTable 的資料行數
+                Console.WriteLine($"查詢返回的資料行數：{dataTable.Rows.Count}");
 
                 // 將 DataTable 加入到 DataSet
                 dataSet.Tables.Add(dataTable);
@@ -49,8 +50,9 @@ namespace DBDemo
                     // 加載 report.frx
                     report.Load(reportPath);
 
-                    // 將資料集註冊到報表
+                    // 註冊 DataSet 到報表中
                     report.RegisterData(dataSet, "Employees");
+                    report.GetDataSource("Employees").Enabled = true; // 確保資料來源啟用
 
                     // 準備報表
                     report.Prepare();
