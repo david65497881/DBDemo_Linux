@@ -12,14 +12,12 @@ namespace DBDemo
     {
         static void Main(string[] args)
         {
-            //設定動態路徑。AppDomain.CurrentDomain.BaseDirectory獲取程式執行的根目錄
             string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string databasePath = Path.Combine(baseDirectory, "database.db");
             string connectionString = $"Data Source={databasePath};Version=3;";
             string reportPath = Path.Combine(baseDirectory, "report.frx");
             string outputPath = Path.Combine(baseDirectory, "ReportOutput.pdf");
 
-            //檢查並建立資料庫
             if (!File.Exists(databasePath))
             {
                 SQLiteConnection.CreateFile(databasePath);
@@ -30,7 +28,6 @@ namespace DBDemo
             {
                 connection.Open();
 
-                //建立資料表（若不存在）
                 string createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS Employees (
                     id INTEGER PRIMARY KEY,
@@ -40,11 +37,9 @@ namespace DBDemo
                 );";
                 connection.Execute(createTableQuery);
 
-                //檢查是否已存在資料
                 string checkDataQuery = "SELECT COUNT(*) FROM Employees;";
                 int rowCount = connection.ExecuteScalar<int>(checkDataQuery);
 
-                // 如果資料表為空，則插入資料
                 if (rowCount == 0)
                 {
                     string insertDataQuery = @"
@@ -61,19 +56,16 @@ namespace DBDemo
                     Console.WriteLine("資料已存在，跳過插入步驟。");
                 }
 
-                // 檢查報表
                 if (!File.Exists(reportPath))
                 {
                     Console.WriteLine("報表文件不存在。請確認 report.frx 存在於專案目錄中。");
                     return;
                 }
 
-                //產生報表PDF
                 try
                 {
                     DataSet dataSet = new DataSet();
 
-                    // 查詢 Employees 資料表
                     DataTable employeesTable = new DataTable("Employees");
                     using (var command = new SQLiteCommand("SELECT * FROM Employees", connection))
                     using (var adapter = new SQLiteDataAdapter(command))
@@ -81,18 +73,28 @@ namespace DBDemo
                         adapter.Fill(employeesTable);
                     }
 
-                    // 檢查是否成功填充
                     Console.WriteLine($"Employees 表行數: {employeesTable.Rows.Count}");
-
                     dataSet.Tables.Add(employeesTable);
 
                     using (Report report = new Report())
                     {
                         report.Load(reportPath);
 
-                        // 註冊資料到報表
-                        report.RegisterData(dataSet, "EmployeesData");
+                        // 註冊 DataTable，名稱為 "Employees"
+                        report.RegisterData(dataSet, "Employees");
                         report.GetDataSource("Employees").Enabled = true;
+
+
+                        var dataSource = report.GetDataSource("Employees");
+                        if (dataSource != null)
+                        {
+                            Console.WriteLine($"報表 DataSource 行數: {dataSource.RowCount}");
+                        }
+                        else
+                        {
+                            Console.WriteLine("報表 DataSource 未找到。");
+                        }
+
 
                         report.Prepare();
 
@@ -107,8 +109,6 @@ namespace DBDemo
                 {
                     Console.WriteLine("報表生成或匯出時發生錯誤：" + ex.Message);
                 }
-
-
             }
 
             Console.WriteLine("程式執行結束。");
