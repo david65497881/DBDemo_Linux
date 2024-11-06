@@ -12,10 +12,12 @@ namespace DBDemo
     {
         static void Main(string[] args)
         {
-            string databasePath = @"C:\Users\user\Desktop\DBDemo\DBDemo\bin\Debug\net6.0\database.db";
-            string connectionString = "Data Source=database.db;Version=3;";
-            string reportPath = "report.frx";
-            string outputPath = Path.Combine(Directory.GetCurrentDirectory(), "ReportOutput.pdf");
+            //設定動態路徑。AppDomain.CurrentDomain.BaseDirectory獲取程式執行的根目錄
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string databasePath = Path.Combine(baseDirectory, "database.db");
+            string connectionString = $"Data Source={databasePath};Version=3;";
+            string reportPath = Path.Combine(baseDirectory, "report.frx");
+            string outputPath = Path.Combine(baseDirectory, "ReportOutput.pdf");
 
             //檢查並建立資料庫
             if (!File.Exists(databasePath))
