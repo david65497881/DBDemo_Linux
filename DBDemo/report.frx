@@ -1,19 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="10/30/2024 10:05:04" ReportInfo.Modified="10/30/2024 13:20:13" ReportInfo.CreatorVersion="2025.1.0.0">
-  <Dictionary/>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="10/30/2024 10:05:04" ReportInfo.Modified="11/06/2024 14:54:27" ReportInfo.CreatorVersion="2025.1.0.0">
+  <Dictionary>
+    <SQLiteDataConnection Name="Connection" ConnectionString="rijcmlqIltkgxALMArhJ2W63qXqy3kbgrVF3RBuoGH6WHajT7aq+D7FXOv2sr+jW/L0tJf4Jt0xxvrjTF6D1e+tgFGRdoSmOdZepf3FmicDR207q3w=">
+      <TableDataSource Name="Employees" DataType="System.Int32" Enabled="true" TableName="Employees">
+        <Column Name="id" DataType="System.Int64"/>
+        <Column Name="name" DataType="System.String"/>
+        <Column Name="salary" DataType="System.Int64"/>
+        <Column Name="managerId" DataType="System.Int64"/>
+      </TableDataSource>
+    </SQLiteDataConnection>
+  </Dictionary>
   <ReportPage Name="Page1" Watermark.Font="宋体, 60pt">
     <ReportTitleBand Name="ReportTitle1" Width="718.2" Height="37.8">
       <TextObject Name="Text1" Left="-9450" Top="-9450" Width="94.5" Height="18.9" Text="NonManagerEmployees" Font="宋体, 9pt"/>
     </ReportTitleBand>
     <PageHeaderBand Name="PageHeader1" Top="41.8" Width="718.2" Height="56.7"/>
-    <DataBand Name="Data1" Top="102.5" Width="718.2" Height="170.1" RowCount="0" MaxRows="5" PrintIfDatasourceEmpty="true">
+    <DataBand Name="Data1" Top="102.5" Width="718.2" Height="170.1" DataSource="Employees" RowCount="0" MaxRows="5" Filter="[Employees.managerId] != null" PrintIfDatasourceEmpty="true">
       <TextObject Name="Text2" Left="774.9" Top="9.45" Width="94.5" Height="18.9" Text="NonManagerEmployees" Font="宋体, 9pt"/>
-      <TextObject Name="Text3" Width="207.9" Height="56.7" Font="宋体, 9pt"/>
-      <TextObject Name="Text6" Left="217.35" Width="207.9" Height="37.8" Text="非管理職(managerId不等於null)" Font="宋体, 9pt"/>
+      <TextObject Name="Text3" Width="207.9" Height="56.7" Text="[Employees.name]&#13;&#10;" Font="宋体, 9pt" TextRenderType="Inline"/>
+      <TextObject Name="Text6" Left="217.35" Width="207.9" Height="37.8" Text="非管理職" Font="宋体, 9pt"/>
     </DataBand>
-    <DataBand Name="Data2" Top="276.6" Width="718.2" Height="145.9">
+    <DataBand Name="Data2" Top="276.6" Width="718.2" Height="145.9" DataSource="Employees">
       <TextObject Name="Text5" Left="217.35" Width="207.9" Height="37.8" Text="非管理職且薪資高於該主管人員" Font="宋体, 9pt"/>
-      <TextObject Name="Text4" Width="207.9" Height="75.6" Font="宋体, 9pt"/>
+      <TextObject Name="Text4" Width="207.9" Height="75.6" Text="[Employees.name]" Font="宋体, 9pt"/>
     </DataBand>
     <PageFooterBand Name="PageFooter1" Top="426.5" Width="718.2" Height="444.15"/>
   </ReportPage>
