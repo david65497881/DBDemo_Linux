@@ -86,6 +86,7 @@ namespace DBDemo
                         //將PDF存放到指定的路徑 => outputpath
                         report.Export(pdfExport, outputPath);
                         Console.WriteLine($"報表已匯出至 {outputPath}");
+
                     }
                 }
             }
