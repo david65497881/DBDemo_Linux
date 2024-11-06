@@ -34,7 +34,8 @@ namespace DBDemo
                 DataTable dataTable = new DataTable("Employees");
 
                 // 修改查詢，將多個人名合併為單一字串，以換行符號分隔
-                using (var command = new SQLiteCommand("SELECT group_concat(name, '\n') as name, salary, managerId FROM Employees GROUP BY managerId", connection))
+                using (var command = new SQLiteCommand("SELECT name, salary, managerId FROM Employees WHERE managerId IS NOT NULL", connection))
+
                 using (var adapter = new SQLiteDataAdapter(command))
                 {
                     adapter.Fill(dataTable);
