@@ -73,34 +73,26 @@ namespace DBDemo
                 {
                     DataSet dataSet = new DataSet();
 
-                    // 查詢 NonManagerEmployees 資料表
-                    DataTable nonManagerTable = new DataTable("NonManagerEmployees");
-                    using (var command = new SQLiteCommand("SELECT name FROM Employees WHERE managerId IS NOT NULL", connection))
+                    // 查詢 Employees 資料表
+                    DataTable employeesTable = new DataTable("Employees");
+                    using (var command = new SQLiteCommand("SELECT * FROM Employees", connection))
                     using (var adapter = new SQLiteDataAdapter(command))
                     {
-                        adapter.Fill(nonManagerTable);
+                        adapter.Fill(employeesTable);
                     }
-                    dataSet.Tables.Add(nonManagerTable);
 
-                    // 查詢 HigherSalaryEmployees 資料表
-                    DataTable higherSalaryTable = new DataTable("HigherSalaryEmployees");
-                    using (var command = new SQLiteCommand(@"
-                    SELECT e1.name 
-                    FROM Employees e1
-                    JOIN Employees e2 ON e1.managerId = e2.id
-                    WHERE e1.salary > e2.salary", connection))
-                    using (var adapter = new SQLiteDataAdapter(command))
-                    {
-                        adapter.Fill(higherSalaryTable);
-                    }
-                    dataSet.Tables.Add(higherSalaryTable);
+                    // 檢查是否成功填充
+                    Console.WriteLine($"Employees 表行數: {employeesTable.Rows.Count}");
+
+                    dataSet.Tables.Add(employeesTable);
 
                     using (Report report = new Report())
                     {
                         report.Load(reportPath);
+
+                        // 註冊資料到報表
                         report.RegisterData(dataSet, "EmployeesData");
-                        report.GetDataSource("NonManagerEmployees").Enabled = true;
-                        report.GetDataSource("HigherSalaryEmployees").Enabled = true;
+                        report.GetDataSource("Employees").Enabled = true;
 
                         report.Prepare();
 
@@ -115,6 +107,8 @@ namespace DBDemo
                 {
                     Console.WriteLine("報表生成或匯出時發生錯誤：" + ex.Message);
                 }
+
+
             }
 
             Console.WriteLine("程式執行結束。");
