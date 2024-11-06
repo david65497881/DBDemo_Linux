@@ -13,13 +13,15 @@ namespace DBDemo
     {
         static void Main(string[] args)
         {
+            string databasePath = @"C:\Users\user\Desktop\DBDemo\DBDemo\bin\Debug\net6.0\database.db";
             //Version=3表示SQLite版本為3
             string connectionString = "Data Source=database.db;Version=3;";
 
             // 檢查資料庫檔案是否存在；如果不存在，則建立
-            if (!File.Exists("./database.db"))
+            if (!File.Exists(databasePath))
             {
-                SQLiteConnection.CreateFile("database.db");
+                SQLiteConnection.CreateFile(databasePath);
+                Console.WriteLine("資料庫已建立");
             }
 
             using (var connection = new SQLiteConnection(connectionString))
