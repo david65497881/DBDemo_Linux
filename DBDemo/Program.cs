@@ -19,52 +19,78 @@ namespace DBDemo
             // PDF 檔案存放路徑
             string outputPath = Path.Combine(Directory.GetCurrentDirectory(), "ReportOutput.pdf");
 
-            if (!File.Exists(reportPath))
+            try
             {
-                Console.WriteLine("報表文件不存在。請確認 report.frx 存在於專案目錄中。");
-                return;
-            }
-
-            using (var connection = new SQLiteConnection(connectionString))
-            {
-                connection.Open();
-
-                // 創建 DataSet 並查詢資料填入 DataTable
-                DataSet dataSet = new DataSet();
-                DataTable dataTable = new DataTable("Employees");
-
-                using (var command = new SQLiteCommand("SELECT name, salary, managerId FROM Employees WHERE managerId IS NOT NULL", connection))
-                using (var adapter = new SQLiteDataAdapter(command))
+                if (!File.Exists(reportPath))
                 {
-                    adapter.Fill(dataTable);
+                    Console.WriteLine("報表文件不存在。請確認 report.frx 存在於專案目錄中。");
+                    return;
                 }
 
-                // 驗證 DataTable 的資料行數
-                Console.WriteLine($"查詢返回的資料行數：{dataTable.Rows.Count}");
-
-                // 將 DataTable 加入到 DataSet
-                dataSet.Tables.Add(dataTable);
-
-                using (Report report = new Report())
+                using (var connection = new SQLiteConnection(connectionString))
                 {
-                    // 加載 report.frx
-                    report.Load(reportPath);
+                    connection.Open();
 
-                    // 註冊 DataSet 到報表中
-                    report.RegisterData(dataSet, "Employees");
-                    report.GetDataSource("Employees").Enabled = true; // 確保資料來源啟用
+                    // 創建 DataSet 並查詢資料填入 DataTable
+                    DataSet dataSet = new DataSet();
 
-
-                    // 準備報表
-                    report.Prepare();
-
-                    // 匯出報表為 PDF
-                    using (PDFSimpleExport pdfExport = new PDFSimpleExport())
+                    // 查詢 NonManagerEmployees 資料表
+                    DataTable nonManagerTable = new DataTable("NonManagerEmployees");
+                    using (var command = new SQLiteCommand("SELECT name, salary, managerId FROM Employees WHERE managerId IS NOT NULL", connection))
+                    using (var adapter = new SQLiteDataAdapter(command))
                     {
-                        report.Export(pdfExport, outputPath);
-                        Console.WriteLine($"報表已匯出至 {outputPath}");
+                        adapter.Fill(nonManagerTable);
+                    }
+                    dataSet.Tables.Add(nonManagerTable);
+
+                    // 查詢 HigherSalaryEmployees 資料表
+                    DataTable higherSalaryTable = new DataTable("HigherSalaryEmployees");
+                    using (var command = new SQLiteCommand(@"SELECT e1.name, e1.salary, e1.managerId
+                                                             FROM Employees e1
+                                                             JOIN Employees e2 ON e1.managerId = e2.id
+                                                             WHERE e1.salary > e2.salary", connection))
+                    using (var adapter = new SQLiteDataAdapter(command))
+                    {
+                        adapter.Fill(higherSalaryTable);
+                    }
+                    dataSet.Tables.Add(higherSalaryTable);
+
+                    using (Report report = new Report())
+                    {
+                        try
+                        {
+                            // 加載 report.frx
+                            report.Load(reportPath);
+
+                            // 註冊 DataSet 中的所有 DataTable 到報表中
+                            report.RegisterData(dataSet, "EmployeesData");
+                            report.GetDataSource("NonManagerEmployees").Enabled = true;
+                            report.GetDataSource("HigherSalaryEmployees").Enabled = true;
+
+                            // 準備報表
+                            report.Prepare();
+
+                            // 匯出報表為 PDF
+                            using (PDFSimpleExport pdfExport = new PDFSimpleExport())
+                            {
+                                report.Export(pdfExport, outputPath);
+                                Console.WriteLine($"報表已匯出至 {outputPath}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("報表生成或匯出時發生錯誤：" + ex.Message);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("程式執行時發生錯誤：" + ex.Message);
+            }
+            finally
+            {
+                Console.WriteLine("程式執行結束。");
             }
             Console.ReadLine();
         }
