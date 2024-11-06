@@ -36,7 +36,7 @@ namespace DBDemo
 
                     // 查詢 NonManagerEmployees 資料表
                     DataTable nonManagerTable = new DataTable("NonManagerEmployees");
-                    using (var command = new SQLiteCommand("SELECT name, salary, managerId FROM Employees WHERE managerId IS NOT NULL", connection))
+                    using (var command = new SQLiteCommand("SELECT name FROM Employees WHERE managerId IS NOT NULL", connection))
                     using (var adapter = new SQLiteDataAdapter(command))
                     {
                         adapter.Fill(nonManagerTable);
@@ -45,10 +45,11 @@ namespace DBDemo
 
                     // 查詢 HigherSalaryEmployees 資料表
                     DataTable higherSalaryTable = new DataTable("HigherSalaryEmployees");
-                    using (var command = new SQLiteCommand(@"SELECT e1.name, e1.salary, e1.managerId
-                                                             FROM Employees e1
-                                                             JOIN Employees e2 ON e1.managerId = e2.id
-                                                             WHERE e1.salary > e2.salary", connection))
+                    using (var command = new SQLiteCommand(@"
+                    SELECT e1.name 
+                    FROM Employees e1
+                    JOIN Employees e2 ON e1.managerId = e2.id
+                    WHERE e1.salary > e2.salary", connection))
                     using (var adapter = new SQLiteDataAdapter(command))
                     {
                         adapter.Fill(higherSalaryTable);
