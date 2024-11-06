@@ -12,26 +12,63 @@ namespace DBDemo
     {
         static void Main(string[] args)
         {
-            // SQLite 資料庫連線
+            string databasePath = @"C:\Users\user\Desktop\DBDemo\DBDemo\bin\Debug\net6.0\database.db";
             string connectionString = "Data Source=database.db;Version=3;";
-            // 報表模板的路徑
             string reportPath = "report.frx";
-            // PDF 檔案存放路徑
             string outputPath = Path.Combine(Directory.GetCurrentDirectory(), "ReportOutput.pdf");
 
-            try
+            //檢查並建立資料庫
+            if (!File.Exists(databasePath))
             {
+                SQLiteConnection.CreateFile(databasePath);
+                Console.WriteLine("資料庫已建立");
+            }
+
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+
+                //建立資料表（若不存在）
+                string createTableQuery = @"
+                CREATE TABLE IF NOT EXISTS Employees (
+                    id INTEGER PRIMARY KEY,
+                    name VARCHAR(100),
+                    salary INTEGER,
+                    managerId INTEGER
+                );";
+                connection.Execute(createTableQuery);
+
+                //檢查是否已存在資料
+                string checkDataQuery = "SELECT COUNT(*) FROM Employees;";
+                int rowCount = connection.ExecuteScalar<int>(checkDataQuery);
+
+                // 如果資料表為空，則插入資料
+                if (rowCount == 0)
+                {
+                    string insertDataQuery = @"
+                    INSERT INTO Employees (id, name, salary, managerId) VALUES (1, 'Joe', 70000, 3);
+                    INSERT INTO Employees (id, name, salary, managerId) VALUES (2, 'Henry', 80000, 4);
+                    INSERT INTO Employees (id, name, salary, managerId) VALUES (3, 'Sam', 60000, NULL);
+                    INSERT INTO Employees (id, name, salary, managerId) VALUES (4, 'Max', 90000, NULL);
+                    ";
+                    connection.Execute(insertDataQuery);
+                    Console.WriteLine("資料已插入成功。");
+                }
+                else
+                {
+                    Console.WriteLine("資料已存在，跳過插入步驟。");
+                }
+
+                // 檢查報表
                 if (!File.Exists(reportPath))
                 {
                     Console.WriteLine("報表文件不存在。請確認 report.frx 存在於專案目錄中。");
                     return;
                 }
 
-                using (var connection = new SQLiteConnection(connectionString))
+                //產生報表PDF
+                try
                 {
-                    connection.Open();
-
-                    // 創建 DataSet 並查詢資料填入 DataTable
                     DataSet dataSet = new DataSet();
 
                     // 查詢 NonManagerEmployees 資料表
@@ -58,41 +95,27 @@ namespace DBDemo
 
                     using (Report report = new Report())
                     {
-                        try
+                        report.Load(reportPath);
+                        report.RegisterData(dataSet, "EmployeesData");
+                        report.GetDataSource("NonManagerEmployees").Enabled = true;
+                        report.GetDataSource("HigherSalaryEmployees").Enabled = true;
+
+                        report.Prepare();
+
+                        using (PDFSimpleExport pdfExport = new PDFSimpleExport())
                         {
-                            // 加載 report.frx
-                            report.Load(reportPath);
-
-                            // 註冊 DataSet 中的所有 DataTable 到報表中
-                            report.RegisterData(dataSet, "EmployeesData");
-                            report.GetDataSource("NonManagerEmployees").Enabled = true;
-                            report.GetDataSource("HigherSalaryEmployees").Enabled = true;
-
-                            // 準備報表
-                            report.Prepare();
-
-                            // 匯出報表為 PDF
-                            using (PDFSimpleExport pdfExport = new PDFSimpleExport())
-                            {
-                                report.Export(pdfExport, outputPath);
-                                Console.WriteLine($"報表已匯出至 {outputPath}");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine("報表生成或匯出時發生錯誤：" + ex.Message);
+                            report.Export(pdfExport, outputPath);
+                            Console.WriteLine($"報表已匯出至 {outputPath}");
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("報表生成或匯出時發生錯誤：" + ex.Message);
+                }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine("程式執行時發生錯誤：" + ex.Message);
-            }
-            finally
-            {
-                Console.WriteLine("程式執行結束。");
-            }
+
+            Console.WriteLine("程式執行結束。");
             Console.ReadLine();
         }
     }
