@@ -54,6 +54,7 @@ namespace DBDemo
                     report.RegisterData(dataSet, "Employees");
                     report.GetDataSource("Employees").Enabled = true; // 確保資料來源啟用
 
+
                     // 準備報表
                     report.Prepare();
 
