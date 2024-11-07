@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Data;
 using System.Data.SQLite;
-using Dapper;
 using System.IO;
+using Dapper;
 using FastReport;
 using FastReport.Export.PdfSimple;
-using System.Text;
-using System.Linq;
 
 namespace DBDemo
 {
@@ -13,82 +12,124 @@ namespace DBDemo
     {
         static void Main(string[] args)
         {
-            //SQLite資料庫連線
-            string connectionString = "Data Source=database.db;Version=3;";
-            //報表模板的路徑
-            string reportPath = "report.frx";
-            //PDF檔案存放路徑。Directory.GetCurrentDirectory() =>獲取當前專案運行時的工作目錄路徑
-            //Path.Combine => 將Directory.GetCurrentDirectory() 跟 ReportOutput.pdf 結合產生完整路徑
-            string outputPath = Path.Combine(Directory.GetCurrentDirectory(), "ReportOutput.pdf");
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string databasePath = Path.Combine(baseDirectory, "database.db");
+            string connectionString = $"Data Source={databasePath};Version=3;";
+            string reportPath = Path.Combine(baseDirectory, "report.frx");
+            string outputPath = Path.Combine(baseDirectory, "ReportOutput.pdf");
 
-            if (!File.Exists(reportPath))
+            if (!File.Exists(databasePath))
             {
-                Console.WriteLine("報表文件不存在。請確認 report.frx 存在於專案目錄中。");
-                return;
+                SQLiteConnection.CreateFile(databasePath);
+                Console.WriteLine("資料庫已建立");
             }
 
-            //使用using確保使用後釋放資源
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
 
-                //使用Dapper的Query()方法查詢資料
-                var managerIdEmployees = connection.Query("SELECT name FROM Employees WHERE managerId IS NOT NULL").ToList();
-                //使用@(逐字字串字面值)來避免使用換行符號
-                var higherSalaryEmployees = connection.Query(@"
-                    SELECT e1.name 
+                string createTableQuery = @"
+                CREATE TABLE IF NOT EXISTS Employees (
+                    id INTEGER PRIMARY KEY,
+                    name VARCHAR(100),
+                    salary INTEGER,
+                    managerId INTEGER
+                );";
+                connection.Execute(createTableQuery);
+
+                string checkDataQuery = "SELECT COUNT(*) FROM Employees;";
+                int rowCount = connection.ExecuteScalar<int>(checkDataQuery);
+
+                if (rowCount == 0)
+                {
+                    string insertDataQuery = @"
+                    INSERT INTO Employees (id, name, salary, managerId) VALUES (1, 'Joe', 70000, 3);
+                    INSERT INTO Employees (id, name, salary, managerId) VALUES (2, 'Henry', 80000, 4);
+                    INSERT INTO Employees (id, name, salary, managerId) VALUES (3, 'Sam', 60000, NULL);
+                    INSERT INTO Employees (id, name, salary, managerId) VALUES (4, 'Max', 90000, NULL);
+                    ";
+                    connection.Execute(insertDataQuery);
+                    Console.WriteLine("資料已插入成功。");
+                }
+                else
+                {
+                    Console.WriteLine("資料已存在，跳過插入步驟。");
+                }
+
+
+                // 查詢所有managerId != null的員工
+                DataTable nonManagersTable = new DataTable("NonManagers");
+                nonManagersTable.Columns.Add("name", typeof(string));
+
+                using (var command = new SQLiteCommand(@"
+                    SELECT name
+                    FROM Employees
+                    WHERE managerId IS NOT NULL", connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        nonManagersTable.Rows.Add(reader["name"]);
+                    }
+                }
+
+                // 查詢⾮管理職且薪資⾼於該主管⼈員
+                DataTable higherThanManagersTable = new DataTable("HigherThanManagers");
+                higherThanManagersTable.Columns.Add("name", typeof(string));
+
+                using (var command = new SQLiteCommand(@"
+                    SELECT e1.name
                     FROM Employees e1
-                    JOIN Employees e2 ON e1.managerId = e2.id
-                    WHERE e1.salary > e2.salary").ToList();
-
-
-                //使用stringbuilder是因為它在處理大量字串連接時效率較高
-                //ApendLine代表會自動換行
-                StringBuilder nonManagerEmployeesText = new StringBuilder();
-                foreach (var employee in managerIdEmployees)
+                    WHERE managerId IS NOT NULL
+                    AND salary > (
+                        SELECT salary FROM Employees e2 WHERE e2.id = e1.managerId
+                    )", connection))
+                using (var reader = command.ExecuteReader())
                 {
-                    nonManagerEmployeesText.AppendLine(employee.name);
+                    while (reader.Read())
+                    {
+                        higherThanManagersTable.Rows.Add(reader["name"]);
+                    }
                 }
 
-                StringBuilder higherSalaryEmployeesText = new StringBuilder();
-                foreach (var employee in higherSalaryEmployees)
+                //確認報表文件是否存在
+                if (!File.Exists(reportPath))
                 {
-                    higherSalaryEmployeesText.AppendLine(employee.name);
+                    Console.WriteLine("報表文件不存在。請確認 report.frx 存在於專案目錄中。");
+                    return;
                 }
 
-                //using => 確保使用後釋放資源
                 using (Report report = new Report())
                 {
-                    //加載report.frx
                     report.Load(reportPath);
 
-                    // 找到 TextObject 並設置資料。使用FindObject尋找名為Text3的物件，由於傳回來的物件會是通用物件，因此加上FastReport.TextObject進行轉換
-                    var nonManagerTextObject = report.FindObject("Text3") as FastReport.TextObject;
-                    //確保物件確實存在於report.frx
-                    if (nonManagerTextObject != null)
+                    // 註冊資料表並啟用資料來源
+                    report.RegisterData(nonManagersTable, "NonManagers");
+                    report.RegisterData(higherThanManagersTable, "HigherThanManagers");
+
+
+                    report.GetDataSource("NonManagers").Enabled = true;
+                    report.GetDataSource("HigherThanManagers").Enabled = true;
+
+
+                    try
                     {
-                        nonManagerTextObject.Text = nonManagerEmployeesText.ToString();
+                        report.Prepare();
+                        using (PDFSimpleExport pdfExport = new PDFSimpleExport())
+                        {
+                            report.Export(pdfExport, outputPath);
+                            Console.WriteLine($"報表已匯出至 {outputPath}");
+                        }
                     }
-
-                    var higherSalaryTextObject = report.FindObject("Text4") as FastReport.TextObject;
-                    if (higherSalaryTextObject != null)
+                    catch (Exception ex)
                     {
-                        higherSalaryTextObject.Text = higherSalaryEmployeesText.ToString();
-                    }
-
-                    //準備報表，這個方法會計算所有表達式和數據綁定，並將報表的頁面渲染到內存中。
-                    report.Prepare();
-
-                    //using 確保試用後釋放資源
-                    //PDFSimpleExport是FastReport提供的一個類別，用於將報表輸出為PDF格式
-                    using (PDFSimpleExport pdfExport = new PDFSimpleExport())
-                    {
-                        //將PDF存放到指定的路徑 => outputpath
-                        report.Export(pdfExport, outputPath);
-                        Console.WriteLine($"報表已匯出至 {outputPath}");
+                        Console.WriteLine("報表生成或匯出時發生錯誤：" + ex.Message);
+                        Console.WriteLine("詳細錯誤：" + ex.StackTrace);
                     }
                 }
             }
+
+            Console.WriteLine("程式執行結束。");
             Console.ReadLine();
         }
     }
