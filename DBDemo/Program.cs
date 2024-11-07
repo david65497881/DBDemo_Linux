@@ -56,58 +56,75 @@ namespace DBDemo
                     Console.WriteLine("資料已存在，跳過插入步驟。");
                 }
 
+                // 查詢符合條件的員工資料，只保留名字
+                DataTable higherThanManagersTable = new DataTable("HigherThanManagers");
+                higherThanManagersTable.Columns.Add("name", typeof(string));
+
+                using (var command = new SQLiteCommand(@"
+                    SELECT e1.name
+                    FROM Employees e1
+                    WHERE managerId IS NOT NULL
+                    AND salary > (
+                        SELECT salary FROM Employees e2 WHERE e2.id = e1.managerId
+                    )", connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        higherThanManagersTable.Rows.Add(reader["name"]);
+                    }
+                }
+
+                // 查詢所有有主管的員工，只保留名字
+                DataTable nonManagersTable = new DataTable("NonManagers");
+                nonManagersTable.Columns.Add("name", typeof(string));
+
+                using (var command = new SQLiteCommand(@"
+                    SELECT name
+                    FROM Employees
+                    WHERE managerId IS NOT NULL", connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        nonManagersTable.Rows.Add(reader["name"]);
+                    }
+                }
+
+                Console.WriteLine($"HigherThanManagers 表行數：{higherThanManagersTable.Rows.Count}");
+                Console.WriteLine($"NonManagers 表行數：{nonManagersTable.Rows.Count}");
+
                 if (!File.Exists(reportPath))
                 {
                     Console.WriteLine("報表文件不存在。請確認 report.frx 存在於專案目錄中。");
                     return;
                 }
 
-                try
+                using (Report report = new Report())
                 {
-                    DataSet dataSet = new DataSet();
+                    report.Load(reportPath);
 
-                    DataTable employeesTable = new DataTable("Employees");
-                    using (var command = new SQLiteCommand("SELECT * FROM Employees", connection))
-                    using (var adapter = new SQLiteDataAdapter(command))
+                    // 註冊資料表並啟用資料來源
+                    report.RegisterData(higherThanManagersTable, "HigherThanManagers");
+                    report.RegisterData(nonManagersTable, "NonManagers");
+
+                    report.GetDataSource("HigherThanManagers").Enabled = true;
+                    report.GetDataSource("NonManagers").Enabled = true;
+
+                    try
                     {
-                        adapter.Fill(employeesTable);
-                    }
-
-                    Console.WriteLine($"Employees 表行數: {employeesTable.Rows.Count}");
-                    dataSet.Tables.Add(employeesTable);
-
-                    using (Report report = new Report())
-                    {
-                        report.Load(reportPath);
-
-                        // 註冊 DataTable，名稱為 "Employees"
-                        report.RegisterData(dataSet, "Employees");
-                        report.GetDataSource("Employees").Enabled = true;
-
-
-                        var dataSource = report.GetDataSource("Employees");
-                        if (dataSource != null)
-                        {
-                            Console.WriteLine($"報表 DataSource 行數: {dataSource.RowCount}");
-                        }
-                        else
-                        {
-                            Console.WriteLine("報表 DataSource 未找到。");
-                        }
-
-
                         report.Prepare();
-
                         using (PDFSimpleExport pdfExport = new PDFSimpleExport())
                         {
                             report.Export(pdfExport, outputPath);
                             Console.WriteLine($"報表已匯出至 {outputPath}");
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("報表生成或匯出時發生錯誤：" + ex.Message);
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("報表生成或匯出時發生錯誤：" + ex.Message);
+                        Console.WriteLine("詳細錯誤：" + ex.StackTrace);
+                    }
                 }
             }
 
