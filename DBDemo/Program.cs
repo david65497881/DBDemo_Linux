@@ -26,8 +26,7 @@ namespace DBDemo
 
             using (var connection = new SQLiteConnection(connectionString))
             {
-                connection.Open();
-
+                
                 string createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS Employees (
                     id INTEGER PRIMARY KEY,
@@ -56,7 +55,24 @@ namespace DBDemo
                     Console.WriteLine("資料已存在，跳過插入步驟。");
                 }
 
-                // 查詢符合條件的員工資料，只保留名字
+ 
+                // 查詢所有managerId != null的員工
+                DataTable nonManagersTable = new DataTable("NonManagers");
+                nonManagersTable.Columns.Add("name", typeof(string));
+
+                using (var command = new SQLiteCommand(@"
+                    SELECT name
+                    FROM Employees
+                    WHERE managerId IS NOT NULL", connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        nonManagersTable.Rows.Add(reader["name"]);
+                    }
+                }
+
+                // 查詢⾮管理職且薪資⾼於該主管⼈員
                 DataTable higherThanManagersTable = new DataTable("HigherThanManagers");
                 higherThanManagersTable.Columns.Add("name", typeof(string));
 
@@ -75,25 +91,7 @@ namespace DBDemo
                     }
                 }
 
-                // 查詢所有有主管的員工，只保留名字
-                DataTable nonManagersTable = new DataTable("NonManagers");
-                nonManagersTable.Columns.Add("name", typeof(string));
-
-                using (var command = new SQLiteCommand(@"
-                    SELECT name
-                    FROM Employees
-                    WHERE managerId IS NOT NULL", connection))
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        nonManagersTable.Rows.Add(reader["name"]);
-                    }
-                }
-
-                Console.WriteLine($"HigherThanManagers 表行數：{higherThanManagersTable.Rows.Count}");
-                Console.WriteLine($"NonManagers 表行數：{nonManagersTable.Rows.Count}");
-
+                //確認報表文件是否存在
                 if (!File.Exists(reportPath))
                 {
                     Console.WriteLine("報表文件不存在。請確認 report.frx 存在於專案目錄中。");
@@ -105,11 +103,13 @@ namespace DBDemo
                     report.Load(reportPath);
 
                     // 註冊資料表並啟用資料來源
-                    report.RegisterData(higherThanManagersTable, "HigherThanManagers");
                     report.RegisterData(nonManagersTable, "NonManagers");
+                    report.RegisterData(higherThanManagersTable, "HigherThanManagers");
 
-                    report.GetDataSource("HigherThanManagers").Enabled = true;
+
                     report.GetDataSource("NonManagers").Enabled = true;
+                    report.GetDataSource("HigherThanManagers").Enabled = true;
+                    
 
                     try
                     {

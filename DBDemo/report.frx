@@ -1,33 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="10/30/2024 10:05:04" ReportInfo.Modified="11/07/2024 10:12:44" ReportInfo.CreatorVersion="2025.1.0.0">
-	<Dictionary>
-		<TableDataSource Name="HigherThanManagers" ReferenceName="HigherThanManagers" DataType="System.Int32" Enabled="true"/>
-		<TableDataSource Name="NonManagers" ReferenceName="NonManagers" DataType="System.Int32" Enabled="true"/>
-	</Dictionary>
-	<ReportPage Name="Page1" Watermark.Font="宋体, 60pt">
-		<!-- 整個報表的標題 -->
-		<ReportTitleBand Name="ReportTitleBandMain" Width="718.2" Height="37.8">
-			<TextObject Name="TitleTextMain" Left="10" Width="300" Height="18.9" Text="Employees Report" Font="宋体, 12pt, style=Bold"/>
-		</ReportTitleBand>
-
-		<!-- 描述性文本：managerId != NULL -->
-		<ReportTitleBand Name="DescriptionNonManagers" Width="718.2" Height="18.9" Top="50">
-			<TextObject Name="DescriptionTextNonManagers" Left="10" Width="300" Height="18.9" Text="managerId != NULL" Font="宋体, 10pt"/>
-		</ReportTitleBand>
-		<!-- 非管理職的員工列表 -->
-		<DataBand Name="DataBandNonManagers" Top="70" Width="718.2" Height="37.8" DataSource="NonManagers" RowCount="-1">
-			<TextObject Name="TextNonManagers" Left="10" Width="94.5" Height="18.9" Text="[NonManagers.name]" Font="宋体, 9pt"/>
-		</DataBand>
-
-		<!-- 描述性文本：非管理職且薪資高於該主管人員 -->
-		<ReportTitleBand Name="DescriptionHigherThanManagers" Width="718.2" Height="18.9" Top="130">
-			<TextObject Name="DescriptionTextHigherThanManagers" Left="10" Width="300" Height="18.9" Text="非管理職且薪資高於該主管人員" Font="宋体, 10pt"/>
-		</ReportTitleBand>
-		<!-- 非管理職且薪資高於主管的員工列表 -->
-		<DataBand Name="DataBandHigherThanManagers" Top="150" Width="718.2" Height="37.8" DataSource="HigherThanManagers" RowCount="-1">
-			<TextObject Name="TextHigherThanManagers" Left="10" Width="94.5" Height="18.9" Text="[HigherThanManagers.name]" Font="宋体, 9pt"/>
-		</DataBand>
-
-		<PageFooterBand Name="PageFooter1" Top="200" Width="718.2" Height="302.4"/>
-	</ReportPage>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="10/30/2024 10:05:04" ReportInfo.Modified="11/07/2024 10:42:44" ReportInfo.CreatorVersion="2025.1.0.0">
+  <Dictionary>
+    <TableDataSource Name="HigherThanManagers" ReferenceName="HigherThanManagers" DataType="System.Int32" Enabled="true"/>
+    <TableDataSource Name="NonManagers" ReferenceName="NonManagers" DataType="System.Int32" Enabled="true"/>
+  </Dictionary>
+  <ReportPage Name="Page1" Watermark.Font="宋体, 60pt">
+    <ReportTitleBand Name="DescriptionHigherThanManagers" Width="718.2" Height="18.9">
+      <TextObject Name="DescriptionTextHigherThanManagers" Left="10" Width="300" Height="18.9" Text="Employees" Font="宋体, 10pt"/>
+    </ReportTitleBand>
+    <DataBand Name="DataBandNonManagers" Top="64.7" Width="718.2" Height="37.8" DataSource="NonManagers" RowCount="-1">
+      <TextObject Name="TextNonManagers" Left="10" Top="9.45" Width="94.5" Height="18.9" Text="[NonManagers.name]" Font="宋体, 9pt"/>
+      <DataHeaderBand Name="DataHeader1" Top="22.9" Width="718.2" Height="37.8">
+        <TextObject Name="Text1" Left="9.45" Top="9.45" Width="151.2" Height="18.9" Text="managerId != Null" Font="宋体, 9pt"/>
+      </DataHeaderBand>
+    </DataBand>
+    <DataBand Name="DataBandHigherThanManagers" Top="148.3" Width="718.2" Height="37.8" DataSource="HigherThanManagers" RowCount="-1">
+      <TextObject Name="TextHigherThanManagers" Left="10" Top="9.45" Width="94.5" Height="18.9" Text="[HigherThanManagers.name]" Font="宋体, 9pt"/>
+      <DataHeaderBand Name="DataHeader2" Top="106.5" Width="718.2" Height="37.8">
+        <TextObject Name="Text2" Left="9.45" Top="9.45" Width="207.9" Height="18.9" Text="非管理職且薪資高於該主管人員" Font="宋体, 9pt"/>
+      </DataHeaderBand>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="190.1" Width="718.2" Height="302.4"/>
+  </ReportPage>
 </Report>
