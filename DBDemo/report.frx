@@ -1,5 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="10/30/2024 10:05:04" ReportInfo.Modified="11/06/2024 17:35:39" ReportInfo.CreatorVersion="2025.1.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="10/30/2024 10:05:04" ReportInfo.Modified="11/07/2024 08:54:11" ReportInfo.CreatorVersion="2025.1.0.0">
+	<Dictionary>
+		<!-- 移除了內嵌的SQLite資料連接 -->
+	</Dictionary>
 	<ReportPage Name="Page1" Watermark.Font="宋体, 60pt">
 		<ReportTitleBand Name="ReportTitle1" Width="718.2" Height="37.8">
 			<TextObject Name="TitleText" Left="10" Width="300" Height="18.9" Text="Employees Report" Font="宋体, 12pt, style=Bold"/>
@@ -10,7 +13,7 @@
 			<TextObject Name="HeaderSalary" Left="210" Width="100" Height="18.9" Text="Salary" Font="宋体, 10pt, style=Bold"/>
 			<TextObject Name="HeaderManagerID" Left="310" Width="100" Height="18.9" Text="Manager ID" Font="宋体, 10pt, style=Bold"/>
 		</PageHeaderBand>
-		<DataBand Name="Data1" Top="74.15" Width="718.2" Height="122.85" DataSource="Employees" RowCount="0">
+		<DataBand Name="Data1" Top="74.15" Width="718.2" Height="122.85" DataSource="Employees" RowCount="-1">
 			<TextObject Name="Text1" Left="9.45" Width="94.5" Height="37.8" Text="[Employees.id]" Font="宋体, 9pt"/>
 			<TextObject Name="Text2" Left="103.95" Width="94.5" Height="37.8" Text="[Employees.name]" Font="宋体, 9pt"/>
 			<TextObject Name="Text3" Left="207.9" Width="94.5" Height="37.8" Text="[Employees.salary]" Font="宋体, 9pt"/>
