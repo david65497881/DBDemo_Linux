@@ -72,6 +72,8 @@ namespace DBDemo
                         nonManagersTable.Rows.Add(reader["name"]);
                     }
                 }
+                
+
 
                 // 查詢⾮管理職且薪資⾼於該主管⼈員
                 DataTable higherThanManagersTable = new DataTable("HigherThanManagers");
